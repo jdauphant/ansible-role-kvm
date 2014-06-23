@@ -1,0 +1,10 @@
+---
+- name: install kvm for Debian OS family
+  apt: pkg=qemu-kvm,libvirt-bin,virtinst,virt-top,bridge-utils state={{ kvm_pkg_state }}
+  when: ansible_os_family == 'Debian'
+  tags: ["packages","kvm"]
+
+- name: ensure libvirt-bin is started/stopped
+  service: name=libvirt-bin state={{ kvm_service_state }} enabled={{ kvm_service_enabled }}
+  tags: ["service","kvm"]
+

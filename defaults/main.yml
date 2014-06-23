@@ -1,0 +1,9 @@
+---
+# Package states: installed or latest
+kvm_pkg_state: installed
+
+# Service states: started or stopped
+kvm_service_state: started
+
+# Service enabled on startup: yes or no
+kvm_service_enabled: yes
