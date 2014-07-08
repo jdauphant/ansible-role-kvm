@@ -1,4 +1,8 @@
 ---
+kvm_memory_balloon: "virtio" # virtio or none
+kvm_vms: []
+kvm_administrators: []
+
 # Package states: installed or latest
 kvm_pkg_state: installed
 

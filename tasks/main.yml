@@ -1,10 +1,52 @@
 ---
 - name: install kvm for Debian OS family
-  apt: pkg=qemu-kvm,libvirt-bin,virtinst,virt-top,bridge-utils state={{ kvm_pkg_state }}
+  apt: pkg=qemu-kvm,libvirt-bin,virtinst,virt-top,bridge-utils,qemu state={{ kvm_pkg_state }}
   when: ansible_os_family == 'Debian'
   tags: ["packages","kvm"]
 
+- name: set administrators
+  user: name={{item}} append=yes groups=libvirtd
+  with_items: kvm_administrators
+  when: ansible_os_family == 'Debian'
+  tags: ["configuration","kvm"]
+
 - name: ensure libvirt-bin is started/stopped
   service: name=libvirt-bin state={{ kvm_service_state }} enabled={{ kvm_service_enabled }}
+  tags: ["service","kvm"]
+
+- name: ensure disks path exist
+  file: state=directory path={{item.1.path | dirname}}
+  with_subelements: 
+    - kvm_vms
+    - disks
+  tags: ["configuration","kvm"]
+
+- name: ensure disks are copied
+  command: cp {{item.1.source}} {{item.1.path}} creates={{item.1.path}}
+  with_subelements: 
+    - kvm_vms
+    - disks
+  when: item.1.source is defined
+  tags: ["configuration","kvm"]
+
+- name: ensure disks are created
+  command: qemu-img create -f {{item.1.type}} {{item.1.path}} {{item.1.size}} creates={{item.1.path}}
+  with_subelements: 
+    - kvm_vms
+    - disks
+  when: item.1.size is defined and item.1.type is defined and item.1.type in ["qcow2", "raw"]
+  tags: ["configuration","kvm"]
+
+- name: define VMs
+  virt: name={{item.name}}
+        command=define
+        xml="{{ lookup('template', 'vm.kvm.libvirt.xml.j2') }}"
+        uri={{kvm_uri}}
+  with_items: kvm_vms
+  tags: ["configuration","kvm"]
+
+- name: start VMs
+  virt: name={{item.name}} state=running uri={{kvm_uri}}
+  with_items: kvm_vms
   tags: ["service","kvm"]
 
