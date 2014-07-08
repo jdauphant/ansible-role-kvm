@@ -1,0 +1,38 @@
+<domain type='kvm'>
+  <name>{{item.name}}</name>
+  <uuid>{{ lookup('lines','uuidgen') }}</uuid>
+  <memory unit='MiB'>{{item.memory}}</memory>
+  <currentMemory unit='MiB'>{{item.memory}}</currentMemory>
+  <vcpu>{{item.vcpu}}</vcpu>
+  <os>
+    <type arch='x86_64'>hvm</type>
+    <boot dev='hd'/>
+  </os>
+  <clock offset='utc'/>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <emulator>{{kvm_emulator_path}}</emulator>
+{% for disk in item.disks %}
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='{{disk.type|default("raw")}}'/>
+      <source file='{{disk.path}}'/>
+      <target dev='vd{{ "abcdefghijklmnopqrstuvwxyz"[loop.index0] }}' bus='virtio'/>
+{% if disk.readonly|default(false) %}  
+      <readonly/>
+{% endif %}
+    </disk>
+{% endfor %}
+    <controller type='ide' index='0' />
+    <interface type='network'>
+      <mac address='{{item.mac|default( "52:54:00"+lookup('lines', 'echo '+item.name+'| md5sum | sed \'s/\(..\)/\\1:/g\' | cut -b1-8'))}}'/>
+      <source network='{{item.network|default('default')}}'/>
+      <model type='virtio'/>
+    </interface>
+    <memballoon model='{{kvm_memory_balloon}}'/>
+{% if item.vnc|default(false) %}    
+    <graphics type='vnc' port='-1'/>
+{% endif %}
+  </devices>
+</domain>

@@ -1,0 +1,14 @@
+<network>
+  <name>{{item.name}}</name>
+  <bridge name="{{item.bridge_name}} />
+{% if item.nat | default(false) %}
+  <forward mode="nat"/>
+{% endif %}
+  <ip address="{{item.gateway_ip}}" netmask="{{item.netmask}}">
+    <dhcp>
+      <range start="{{item.dhcp_range_start}}" end="{{item.dhcp_range_end}}" />
+      <host mac="00:16:3e:77:e2:ed" ip="192.168.42.10" />
+      <host mac="00:16:3e:3e:a9:1a" ip="192.168.42.11" />
+    </dhcp>
+  </ip>
+</network>
